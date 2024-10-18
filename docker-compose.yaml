@@ -1,0 +1,6 @@
+version: '3'
+services:
+  app:
+    image: mylenarochi/blueriver
+    ports:
+      - 8080:8080 
