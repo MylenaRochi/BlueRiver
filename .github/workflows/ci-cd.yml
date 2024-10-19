@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: staging
 
     steps:
       - name: Check out the repository
@@ -28,11 +29,12 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          echo "MyLeNa8786" | docker login -u "mylenarochi" --password-stdin
+          echo "${{ DOCKER_PASSWORD }}" | docker login -u "${{ DOCKER_USERNAME }}" --password-stdin
           docker push mylenarochi/blueriver:${{ github.sha }}
 
   deploy_staging:
     runs-on: ubuntu-latest
+    environment: staging
     needs: build
     if: github.ref == 'refs/heads/staging'
 
@@ -53,6 +55,7 @@ jobs:
 
   deploy_production:
     runs-on: ubuntu-latest
+    environment: staging
     needs: build
     if: github.ref == 'refs/heads/main'
 
