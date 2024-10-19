@@ -29,7 +29,7 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push your-dockerhub-username/your-app-name:${{ github.sha }}
+          docker push mylenarochi/blueriver:${{ github.sha }}
 
   deploy_staging:
     runs-on: ubuntu-latest
@@ -37,9 +37,14 @@ jobs:
     if: github.ref == 'refs/heads/staging'
 
     steps:
-      - name: Deploy to Staging Server
+      - name: Set up SSH agent for Staging
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+      - name: Deploy to Staging EC2 Instance using Docker
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.STAGING_HOST }} << 'EOF'
           docker pull mylenarochi/blueriver:${{ github.sha }}
           docker stop app_container || true
           docker rm app_container || true
@@ -52,9 +57,14 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Deploy to Production Server
+      - name: Set up SSH agent for Production
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: Deploy to Production EC2 Instance using Docker
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.PRODUCTION_HOST }} << 'EOF'
           docker pull mylenarochi/blueriver:${{ github.sha }}
           docker stop app_container || true
           docker rm app_container || true
